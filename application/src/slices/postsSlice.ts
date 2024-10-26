@@ -94,23 +94,33 @@ export const editPost = createAsyncThunk(
       title,
       description,
       tags,
-      imageUrl,
+      image,
     }: {
       postId: string;
       title: string;
       description: string;
       tags: string;
-      imageUrl: string;
+      image?: File;
     },
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.patch(`/publication/edit-post/${postId}`, {
-        title,
-        description,
-        tags,
-        imageUrl,
-      });
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("tags", tags);
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      const response = await api.patch(
+        `/publication/edit-post/${postId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       return response.data.post;
     } catch (error) {
       return rejectWithValue("Failed to edit post");

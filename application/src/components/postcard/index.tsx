@@ -1,5 +1,10 @@
 import { FC, useState } from "react";
-import { HeartIcon, MessageCircleIcon, Trash2Icon } from "lucide-react";
+import {
+  HeartIcon,
+  MessageCircleIcon,
+  Trash2Icon,
+  Edit3Icon,
+} from "lucide-react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store";
 import { deletePost } from "../../slices/postsSlice";
@@ -7,6 +12,7 @@ import { toast } from "sonner";
 import { Post } from "../../slices/postsSlice";
 import { User } from "../../slices/authSlice";
 import Swal from "sweetalert2";
+import EditPostDialog from "../edit-post-dialog";
 
 interface PostCardProps {
   post: Post;
@@ -17,10 +23,10 @@ interface PostCardProps {
 const PostCard: FC<PostCardProps> = ({ post, users, currentUser }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const getUserDetails = (userId: string) => {
-    return users.find((user) => user._id === userId);
-  };
+  const getUserDetails = (userId: string) =>
+    users.find((user) => user._id === userId);
 
   const handleDelete = () => {
     Swal.fire({
@@ -60,14 +66,20 @@ const PostCard: FC<PostCardProps> = ({ post, users, currentUser }) => {
             {post.user.name} {post.user.surname}
           </span>
         </div>
-
         {post.user._id === currentUser?._id && (
-          <Trash2Icon
-            size={20}
-            className="text-red-500 hover:text-red-600 cursor-pointer ml-auto"
-            onClick={handleDelete}
-            aria-disabled={isDeleting}
-          />
+          <div className="ml-auto flex gap-2">
+            <Edit3Icon
+              size={20}
+              className="text-blue-500 hover:text-blue-600 cursor-pointer"
+              onClick={() => setIsEditing(true)}
+            />
+            <Trash2Icon
+              size={20}
+              className="text-red-500 hover:text-red-600 cursor-pointer"
+              onClick={handleDelete}
+              aria-disabled={isDeleting}
+            />
+          </div>
         )}
       </div>
 
@@ -126,6 +138,13 @@ const PostCard: FC<PostCardProps> = ({ post, users, currentUser }) => {
           )}
         </div>
       </div>
+      {isEditing && (
+        <EditPostDialog
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          post={post}
+        />
+      )}
     </div>
   );
 };

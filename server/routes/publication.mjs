@@ -9,6 +9,7 @@ import validateSchema from "../middlewares/validator.mjs";
 import User from "../mongoose/schemas/user.mjs";
 import Comment from "../mongoose/schemas/comment.mjs";
 import upload from "../multer/multerConfig.mjs";
+import { deleteImageFile } from "../utils/delete-image.mjs";
 
 const router = Router();
 
@@ -58,7 +59,6 @@ router.patch(
     try {
       const postId = req.params.postId;
       const userId = req.user._id;
-
       const post = await Publication.findById(postId);
 
       if (!post) {
@@ -73,16 +73,14 @@ router.patch(
 
       const updateData = req.body;
       if (req.file) {
+        if (post.imageUrl) deleteImageFile(post.imageUrl);
         updateData.imageUrl = `/uploads/${req.file.filename}`;
       }
 
       const updatedPost = await Publication.findByIdAndUpdate(
         postId,
         updateData,
-        {
-          new: true,
-          runValidators: true,
-        }
+        { new: true, runValidators: true }
       ).populate("user");
 
       res.json({
@@ -151,13 +149,10 @@ router.delete("/:postId", authorize(), async (req, res) => {
   try {
     const postId = req.params.postId;
     const userId = req.user._id;
-
     const post = await Publication.findById(postId);
 
     if (!post) {
-      return res.json({
-        message: "Post not found",
-      });
+      return res.json({ message: "Post not found" });
     }
 
     if (post.user.toString() !== userId.toString()) {
@@ -166,11 +161,10 @@ router.delete("/:postId", authorize(), async (req, res) => {
       });
     }
 
-    await post.deleteOne();
+    if (post.imageUrl) deleteImageFile(post.imageUrl);
 
-    await User.findByIdAndUpdate(userId, {
-      $pull: { publications: postId },
-    });
+    await post.deleteOne();
+    await User.findByIdAndUpdate(userId, { $pull: { publications: postId } });
 
     res.json({
       message: "Post deleted successfully",
