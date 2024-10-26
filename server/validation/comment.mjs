@@ -7,9 +7,5 @@ export const createCommentSchema = {
     notEmpty: {
       errorMessage: "Comment is required",
     },
-    isLength: {
-      options: { min: 10 },
-      errorMessage: "Comment must be at least 10 characters long",
-    },
   },
 };

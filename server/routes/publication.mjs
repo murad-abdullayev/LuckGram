@@ -163,16 +163,20 @@ router.delete("/:postId", authorize(), async (req, res) => {
 
     if (post.imageUrl) deleteImageFile(post.imageUrl);
 
+    await Comment.deleteMany({ publication: postId });
+
     await post.deleteOne();
+
     await User.findByIdAndUpdate(userId, { $pull: { publications: postId } });
 
     res.json({
-      message: "Post deleted successfully",
+      message: "Post and associated comments deleted successfully",
       post,
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Error deleting post",
+      message: "Error deleting post and associated comments",
+      error,
     });
   }
 });
@@ -180,22 +184,40 @@ router.delete("/:postId", authorize(), async (req, res) => {
 router.get("/:postId/comments", authorize(), async (req, res) => {
   try {
     const postId = req.params.postId;
-    const comments = await Comment.find({ publication: postId });
-
-    if (!comments.length) {
-      return res.status(404).json({
-        message: "No comments found for this post",
-      });
-    }
+    const comments = await Comment.find({ publication: postId })
+      .populate("user", "name surname")
+      .exec();
 
     res.json({
-      comments,
+      comments: comments.length ? comments : [],
     });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching comments for the post",
       error,
     });
+  }
+});
+
+router.patch("/:postId/toggle-like", authorize(), async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const userId = req.user._id;
+
+    const post = await Publication.findById(postId);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const hasLiked = post.likes.includes(userId);
+    if (hasLiked) {
+      post.likes.pull(userId);
+    } else {
+      post.likes.push(userId);
+    }
+
+    await post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: "Error toggling like status", error });
   }
 });
 

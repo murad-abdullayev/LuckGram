@@ -14,6 +14,7 @@ export interface Post {
     email: string;
   };
   comments: Comment[];
+  likes: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -164,6 +165,19 @@ export const fetchComments = createAsyncThunk(
   }
 );
 
+export const toggleLikePost = createAsyncThunk(
+  "posts/toggleLikePost",
+  async (postId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/publication/${postId}/toggle-like`);
+      const { _id, likes } = response.data;
+      return { postId: _id, likes };
+    } catch (error) {
+      return rejectWithValue("Error toggling like status");
+    }
+  }
+);
+
 const postsSlice = createSlice({
   name: "posts",
   initialState,
@@ -224,6 +238,13 @@ const postsSlice = createSlice({
       })
       .addCase(fetchComments.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+      .addCase(toggleLikePost.fulfilled, (state, action) => {
+        const { postId, likes } = action.payload;
+        const post = state.posts.find((post) => post._id === postId);
+        if (post) {
+          post.likes = likes;
+        }
       });
   },
 });

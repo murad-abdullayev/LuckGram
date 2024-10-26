@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
 import { fetchPosts } from "../../slices/postsSlice";
-import { fetchAllUsers, fetchCurrentUser } from "../../slices/authSlice";
+import { fetchCurrentUser } from "../../slices/authSlice";
 import Header from "../../components/header";
 import PostCard from "../../components/postcard";
 import CreatePostDialog from "../../components/create-post-dialog";
@@ -10,14 +10,11 @@ import CreatePostDialog from "../../components/create-post-dialog";
 const HomePage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { posts } = useSelector((state: RootState) => state.posts);
-  const { users, user: currentUser } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchPosts());
-    dispatch(fetchAllUsers());
     dispatch(fetchCurrentUser());
   }, [dispatch]);
 
@@ -49,12 +46,7 @@ const HomePage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-[1000px] mx-auto">
           {posts.map((post) =>
             currentUser ? (
-              <PostCard
-                key={post._id}
-                post={post}
-                users={users}
-                currentUser={currentUser}
-              />
+              <PostCard key={post._id} post={post} currentUser={currentUser} />
             ) : null
           )}
         </div>
