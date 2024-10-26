@@ -64,12 +64,21 @@ export const createPost = createAsyncThunk(
       title: string;
       description: string;
       tags: string;
-      imageUrl: string;
+      image: File;
     },
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.post("/publication/create-post", data);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("tags", data.tags);
+      formData.append("image", data.image);
+
+      const response = await api.post("/publication/create-post", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       return response.data.publication;
     } catch (error) {
       return rejectWithValue("Failed to create post");

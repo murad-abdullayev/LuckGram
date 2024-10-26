@@ -15,7 +15,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm fixed w-full z-50">
       <nav className="mx-auto max-w-7xl flex items-center justify-between p-6 lg:px-8">
         <div className="flex items-center">
           <CloverIcon size={28} className="text-green-500" />

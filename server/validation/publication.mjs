@@ -30,18 +30,6 @@ export const createPostSchema = {
       errorMessage: "Tags are required",
     },
   },
-  imageUrl: {
-    in: ["body"],
-    isString: {
-      errorMessage: "Image URL must be a string",
-    },
-    notEmpty: {
-      errorMessage: "Image URL is required",
-    },
-    isURL: {
-      errorMessage: "Image URL must be a valid URL",
-    },
-  },
 };
 
 export const updatePostSchema = {
@@ -74,16 +62,6 @@ export const updatePostSchema = {
     },
     notEmpty: {
       errorMessage: "Tags are required",
-    },
-  },
-  imageUrl: {
-    in: ["body"],
-    optional: true,
-    isString: {
-      errorMessage: "Image URL must be a string",
-    },
-    isURL: {
-      errorMessage: "Image URL must be a valid URL",
     },
   },
 };

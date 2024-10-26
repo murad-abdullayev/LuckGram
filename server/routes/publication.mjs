@@ -8,18 +8,23 @@ import { authorize } from "../middlewares/user.mjs";
 import validateSchema from "../middlewares/validator.mjs";
 import User from "../mongoose/schemas/user.mjs";
 import Comment from "../mongoose/schemas/comment.mjs";
+import upload from "../multer/multerConfig.mjs";
 
 const router = Router();
 
 router.post(
   "/create-post",
   authorize(),
+  upload.single("image"),
   validateSchema(createPostSchema),
   async (req, res) => {
     try {
       const publicationData = req.matchedData;
-      const user = req.user;
-      publicationData.user = user._id;
+      publicationData.user = req.user._id;
+
+      if (req.file) {
+        publicationData.imageUrl = `/uploads/${req.file.filename}`;
+      }
 
       const newPublication = new Publication(publicationData);
       await newPublication.save();
@@ -27,8 +32,7 @@ router.post(
       const populatedPublication = await Publication.findById(
         newPublication._id
       ).populate("user");
-
-      await User.findByIdAndUpdate(user._id, {
+      await User.findByIdAndUpdate(req.user._id, {
         $push: { publications: newPublication._id },
       });
 
@@ -48,11 +52,11 @@ router.post(
 router.patch(
   "/edit-post/:postId",
   authorize(),
+  upload.single("image"),
   validateSchema(updatePostSchema),
   async (req, res) => {
     try {
       const postId = req.params.postId;
-      const updateData = req.body;
       const userId = req.user._id;
 
       const post = await Publication.findById(postId);
@@ -62,9 +66,14 @@ router.patch(
       }
 
       if (post.user.toString() !== userId.toString()) {
-        return res.status(403).json({
-          message: "You do not have permission to edit this post",
-        });
+        return res
+          .status(403)
+          .json({ message: "You do not have permission to edit this post" });
+      }
+
+      const updateData = req.body;
+      if (req.file) {
+        updateData.imageUrl = `/uploads/${req.file.filename}`;
       }
 
       const updatedPost = await Publication.findByIdAndUpdate(

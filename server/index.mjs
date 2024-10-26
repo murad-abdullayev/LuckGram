@@ -28,6 +28,8 @@ app.use(
   express.static(path.join(__dirname, "../application/assets"))
 );
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
