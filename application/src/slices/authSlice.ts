@@ -1,8 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../utils/api";
 
+export interface User {
+  _id: string;
+  name: string;
+  surname: string;
+  email: string;
+}
+
 interface AuthState {
-  user: any | null;
+  user: User | null;
+  users: User[];
   loading: boolean;
   registerError: string | null;
   loginError: string | null;
@@ -18,6 +26,7 @@ interface AuthError {
 
 const initialState: AuthState = {
   user: null,
+  users: [],
   loading: true,
   registerError: null,
   loginError: null,
@@ -26,6 +35,20 @@ const initialState: AuthState = {
   resetPasswordMessage: null,
   resetPasswordError: null,
 };
+
+export const fetchAllUsers = createAsyncThunk(
+  "auth/fetchAllUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/auth/all-users");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        (error as AuthError)?.response?.data?.message ?? "Failed to fetch users"
+      );
+    }
+  }
+);
 
 export const register = createAsyncThunk(
   "auth/register",
@@ -174,6 +197,13 @@ const authSlice = createSlice({
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.resetPasswordError = action.payload as string;
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
+        state.users = action.payload;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.loginError = action.payload as string;
       });
   },
 });

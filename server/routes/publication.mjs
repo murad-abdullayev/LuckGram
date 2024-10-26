@@ -94,6 +94,10 @@ router.get("/", authorize(), async (req, res) => {
       postsQuery = postsQuery.populate("user");
     }
 
+    if (req.query.includeComments === "true") {
+      postsQuery = postsQuery.populate("comments");
+    }
+
     const posts = await postsQuery.exec();
 
     return res.json({
